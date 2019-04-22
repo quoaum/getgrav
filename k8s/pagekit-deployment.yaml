@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pagekit-www-pv-claim
+  labels:
+    app: pagekit
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+---      
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: pagekit
+  name: pagekit
+spec:
+  selector:
+    matchLabels:
+      app: pagekit
+      tier: frontend
+  strategy:
+    type: Recreate
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pagekit
+        tier: frontend
+    spec:
+      containers:
+      - image: quoaum/pagekit:latest
+        name: pagekit-frontend
+        ports:
+        - containerPort: 8080
+        #volumeMounts:
+        #  - name: pagekit-persistent-storage-www
+        #    mountPath: /www
+        resources:
+          requests:
+            cpu: 15m
+            memory: 384Mi
+          limits:
+            cpu: 900m
+            memory: 384Mi
+      restartPolicy: Always
+      volumes:
+        - name: pagekit-persistent-storage-www
+          persistentVolumeClaim:
+            claimName: pagekit-www-pv-claim
